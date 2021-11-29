@@ -8,13 +8,21 @@ public class UserDao {
     private DataSource dataSource;
 
     public void deleteAll() throws SQLException {
+        StatementStrategy st = new DeleteAllStatement();
+        jdbcContextWithStatementStrategy(st);
+
+    }
+
+
+    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
         Connection c = null;
         PreparedStatement ps = null;
 
         try {
             c = dataSource.getConnection();
-            ps = c.prepareStatement("delete from users");
+            ps= stmt.makePreparedStatement(c);
             ps.executeUpdate();
+
         } catch (SQLException e) {
             throw e;
         }finally {
@@ -22,6 +30,7 @@ public class UserDao {
                 try {
                     ps.close();
                 } catch (SQLException e) {
+
                 }
             }
 
@@ -29,10 +38,10 @@ public class UserDao {
                 try {
                     c.close();
                 } catch (SQLException e) {
+
                 }
             }
         }
-
     }
 
 
