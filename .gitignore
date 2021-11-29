@@ -1,0 +1,8 @@
+
+tobiSpring/tobiSpring/
+tobiSpring/src/test/java/tobi/tobiSpring/TobiSpringApplicationTests.java
+tobiSpring/src/main/resources/application.properties
+tobiSpring/gradlew.bat
+tobiSpring/gradle/wrapper/gradle-wrapper.jar
+.gitattributes
+tobiSpring/build.gradle
