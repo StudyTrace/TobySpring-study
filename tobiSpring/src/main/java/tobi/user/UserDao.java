@@ -3,9 +3,16 @@ package tobi.user;
 import javax.sql.DataSource;
 import java.sql.*;
 
+
 public class UserDao {
 
     private DataSource dataSource;
+
+
+    public void add(User user) throws SQLException{
+        StatementStrategy st = new AddStatement(user);
+        jdbcContextWithStatementStrategy(st);
+    }
 
     public void deleteAll() throws SQLException {
         StatementStrategy st = new DeleteAllStatement();
@@ -84,4 +91,30 @@ public class UserDao {
 
     }
 
+
+    public User get(String id) throws SQLException{
+
+        Connection c = this.dataSource.getConnection();
+        PreparedStatement ps = c
+                .prepareStatement("select * from users where id = ?");
+        ps.setString(1, id);
+
+        ResultSet rs = ps.executeQuery();
+
+        User user = null;
+        if (rs.next()) {
+            user = new User();
+            user.setId(rs.getString("id"));
+            user.setName(rs.getString("name"));
+            user.setPassword(rs.getString("password"));
+        }
+
+        rs.close();
+        ps.close();
+        c.close();
+
+        if (user == null) throw new EmptyResultDataAccessException(1);
+
+        return user;
+    }
 }
