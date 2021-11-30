@@ -27,50 +27,23 @@ public class UserDao {
                     }
                 }
         );
-    }// AddStatement를 익명내부 클래스로전환
+    }
 
 
     public void deleteAll() throws SQLException {
-       jdbcContextWithStatementStrategy(
-               new StatementStrategy() {
-                   @Override
-                   public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-                       return c.prepareStatement("delete from users");
-                   }
-               }
-       );
-    }// DeleteALlStatement를 익명내부 클래스로전환
+       executeSql("delete from users"); // 변하는 SQL문장
+    }
 
-
-//    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
-//        Connection c = null;
-//        PreparedStatement ps = null;
-//
-//        try {
-//            c = dataSource.getConnection();
-//            ps= stmt.makePreparedStatement(c);
-//            ps.executeUpdate();
-//
-//        } catch (SQLException e) {
-//            throw e;
-//        }finally {
-//            if (ps != null) {
-//                try {
-//                    ps.close();
-//                } catch (SQLException e) {
-//
-//                }
-//            }
-//
-//            if (c != null) {
-//                try {
-//                    c.close();
-//                } catch (SQLException e) {
-//
-//                }
-//            }
-//        }
-//    }
+    public void executeSql(final String query) throws SQLException {
+        this.jdbcContext.workWithStatementStrategy(
+                new StatementStrategy() {
+                    @Override
+                    public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                        return c.prepareStatement(query); // 변하지않는 콜백클래스, 오브젝트 생성
+                    }
+                }
+        );
+    }
 
 
 
