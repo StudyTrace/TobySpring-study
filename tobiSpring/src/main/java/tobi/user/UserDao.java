@@ -29,7 +29,7 @@ public class UserDao {
         );
     }
 
-    public void deleteAll() throws SQLException { 
+    public void deleteAll() throws SQLException {
         this.jdbcContext.executeSql("delete from users"); // 변하는 SQL문장
     }
 
