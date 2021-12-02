@@ -9,19 +9,19 @@ import java.sql.SQLException;
 public class ExceptionEx {
 
 
-    public void add(User user) throws DuplicateUserIdException, SQLException {
+    public void add(User user) throws DuplicateUserIdException {
         try {
             // JDBC를 이용해 user정보를 DB에 추가하는코드
             // 그런기능을가진 다른 SQLEception을 던지는 메소드를 호출하는코드
 
         } catch (SQLException e) {
-
-            // ErrorCode가 MySQL의 "Duplicate Entry(1062)" 이면 예외 전환
             if (e.getErrorCode() == MysqlErrorNumbers.ER_DUP_ENTRY)
-                throw DuplicateUserIdException();
-            else
-                throw e; // 그 외에 경우는 SQLException 그대로
+//                throw DuplicateUserIdException(); // SQLException을 직접 메소드 밖으로 던짐
+                throw new DuplicateUserIdException(e); // SQLException을 런타임 예외로 전환하여 던짐
 
+            else
+//                throw e;
+                throw new RuntimeException(e); // 예외포장
 
         }
         catch (SQLException e) {
