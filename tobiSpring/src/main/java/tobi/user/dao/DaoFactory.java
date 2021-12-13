@@ -1,31 +1,23 @@
 package tobi.user.dao;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
 public class DaoFactory {
 
 
+    @Bean
     public UserDao userDao()
 
     {
-        ConnectionMaker connectionMaker = new DConnectionMaker();
-        UserDao userDao = new UserDao(connectionMaker);
-        return userDao;
+        return new UserDao(connectionMaker());
     }
 
-//    public AccountDao accountDao()
-//
-//    {
-//        ConnectionMaker connectionMaker = new DConnectionMaker();
-//        UserDao userDao = new UserDao(connectionMaker);
-//        return new AccountDao(new DConnectionMaker()); // 코드중복
-//    }
-//
-//    public MessageDao accountDao()
-//
-//    {
-//        ConnectionMaker connectionMaker = new DConnectionMaker();
-//        UserDao userDao = new UserDao(connectionMaker);
-//        return new MessageDao(new DConnectionMaker()); // 코드중복
-//    }
+    @Bean
+    public ConnectionMaker connectionMaker() {
+        return new DConnectionMaker();
+    }
 
     /**
      * 관심사를 조금더 분리했다.
