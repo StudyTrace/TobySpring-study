@@ -8,9 +8,7 @@ import java.sql.*;
 public class UserDao {
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-     Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection c = DriverManager.getConnection("jdbc:mysql://localhost/tobi?serverTimezone=Asia/Seoul", "root", "root");
-
+        Connection c = getConnection();
         PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
         ps.setString(1, user.getId());
         ps.setString(2, user.getName());
@@ -24,9 +22,7 @@ public class UserDao {
 
 
     public User get(String id) throws ClassNotFoundException, SQLException {
-
-        Class.forName("com.mysql.cj.jdbc.Driver");
-        Connection c = DriverManager.getConnection("jdbc:mysql://localhost/tobi?serverTimezone=Asia/Seoul", "root", "root");
+        Connection c = getConnection();
         PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
         ps.setString(1, id);
 
@@ -43,6 +39,13 @@ public class UserDao {
 
         return user;
     }
+
+    private Connection getConnection() throws ClassNotFoundException, SQLException {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Connection c = DriverManager.getConnection("jdbc:mysql://localhost/tobi?serverTimezone=Asia/Seoul", "root", "root");
+        return c;
+    }
+    //메소드가 앞으로 2천개가 된다면, DB연결 관련부분에서 변경이 일어날경우 모든메소드의 코드를 변경해야하지만 관심내용을 독립적으로 분리시켜 수정하기에 용이하다.
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
         UserDao dao = new UserDao();
