@@ -7,17 +7,17 @@ import java.sql.*;
 
 public class UserDao {
 
-    private SimpleConnectionMaker simpleConnectionMaker;
+    private ConnectionMaker connectionMaker; // 인터페이스이므로 구체적인 클래스정보를 알필요가없다.
 
     public UserDao() {
-        simpleConnectionMaker = new SimpleConnectionMaker(); // 상태를 관리하는것도아니니 한번만 만들어 인스턴스 변수에 저장해두고 메소드에서 사용하게한다.
+        connectionMaker = new DConnectionMaker(); // 구체적인 클래스에 의존... 문제발생 또다시 원점이다.
 
     }
 
 
 
     public void add(User user) throws ClassNotFoundException, SQLException {
-        Connection c = simpleConnectionMaker.makeNewConnection();
+        Connection c = connectionMaker.makeConnection();
         PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
         ps.setString(1, user.getId());
         ps.setString(2, user.getName());
@@ -31,7 +31,7 @@ public class UserDao {
 
 
     public User get(String id) throws ClassNotFoundException, SQLException {
-        Connection c = simpleConnectionMaker.makeNewConnection();
+        Connection c = connectionMaker.makeConnection();
         PreparedStatement ps = c.prepareStatement("select * from users where id = ?");
         ps.setString(1, id);
 
