@@ -2,17 +2,19 @@ package tobi.user.dao;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.dao.EmptyResultDataAccessException;
 import tobi.user.domain.User;
 
 import java.sql.SQLException;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UserDaoTest {
 
      @Test
-        void addAndGet() throws SQLException, ClassNotFoundException {
+        void addAndGet() throws SQLException {
 
          AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
          UserDao dao = context.getBean("userDao", UserDao.class);
@@ -34,7 +36,6 @@ class UserDaoTest {
          User userget2 = dao.get(user2.getId());
          assertThat(user2.getName(), is(user2.getName()));
          assertThat(user2.getPassword(), is(user2.getPassword()));
-
 
      }
 
@@ -63,4 +64,19 @@ class UserDaoTest {
 
 
      }
+
+
+     @Test
+    void getUserFailure() throws SQLException {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
+         UserDao dao = context.getBean("userDao", UserDao.class);
+         dao.deleteALl();
+         assertThat(dao.getCount(), is(0));
+
+         assertThrows(EmptyResultDataAccessException.class, () ->{
+             dao.get("unknown_id"); // 예외발생해야함
+         });
+     }
+
+
  }
