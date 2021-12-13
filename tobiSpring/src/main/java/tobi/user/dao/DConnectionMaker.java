@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 public class DConnectionMaker implements ConnectionMaker{
     @Override
-    public Connection makeConnection() throws ClassNotFoundException, SQLException {
+    public Connection makeConnection() throws SQLException {
         // D사의 독자적인 방법으로 Connection 생성하는코드
         return null;
     }
