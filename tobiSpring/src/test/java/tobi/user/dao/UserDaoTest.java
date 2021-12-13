@@ -16,18 +16,50 @@ class UserDaoTest {
 
          AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
          UserDao dao = context.getBean("userDao", UserDao.class);
+         User user1 = new User("LeeYoungJin", "이영진", "1234");
+         User user2 = new User("KimYoungJin", "김영진", "5678");
 
-         User user = new User();
-         user.setId("LeeYoungJin");
-         user.setName("이영진");
-         user.setPassword("1234");
+         dao.deleteALl();
+         assertThat(dao.getCount(), is(0));
 
-         dao.add(user);
+         dao.add(user1);
+         dao.add(user2);
+         assertThat(dao.getCount(), is(2));
 
-         User user2 = dao.get(user.getId());
+         User userget1 = dao.get(user1.getId());
+         assertThat(user1.getName(), is(user1.getName()));
+         assertThat(user1.getPassword(), is(user1.getPassword()));
 
-         assertThat(user2.getName(), is(user.getName()));
-         assertThat(user2.getPassword(), is(user.getPassword()));
+
+         User userget2 = dao.get(user2.getId());
+         assertThat(user2.getName(), is(user2.getName()));
+         assertThat(user2.getPassword(), is(user2.getPassword()));
+
+
+     }
+
+
+
+     @Test
+    void count() throws SQLException {
+         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
+         UserDao dao = context.getBean("userDao", UserDao.class);
+
+         User user1 = new User("LeeYoungJin", "이영진", "1234");
+         User user2 = new User("KimYoungJin", "김영진", "5678");
+         User user3 = new User("ParkYoungJin", "박영진", "9012");
+
+         dao.deleteALl();
+         assertThat(dao.getCount(), is(0));
+
+         dao.add(user1);
+         assertThat(dao.getCount(), is(1));
+
+         dao.add(user2);
+         assertThat(dao.getCount(), is(2));
+
+         dao.add(user3);
+         assertThat(dao.getCount(), is(3));
 
 
      }
