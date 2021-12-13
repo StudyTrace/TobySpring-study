@@ -9,7 +9,6 @@ import javax.sql.DataSource;
 @Configuration
 public class DaoFactory {
 
-
     @Bean
     public UserDao userDao()
 

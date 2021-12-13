@@ -1,5 +1,7 @@
 package tobi.user.dao;
 
+import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -13,14 +15,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UserDaoTest {
 
+    private UserDao dao;
+    private User user1;
+    private User user2;
+    private User user3;
+
+    /**
+     * 테스트를 수행하는데 필요한 정보나 오브젝트인 픽스처로 반복되는부분을 추출하였다. 
+     */
+
+    @BeforeEach
+     void setUp() {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
+       this.dao = context.getBean("userDao", UserDao.class);
+        System.out.println("before 실행");
+        this.user1 = new User("LeeYoungJin", "이영진", "1234");
+        this.user2 = new User("KimYoungJin", "김영진", "5678");
+        this.user3 = new User("ParkYoungJin", "박영진", "9012");
+    }
+
+
      @Test
         void addAndGet() throws SQLException {
-
-         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
-         UserDao dao = context.getBean("userDao", UserDao.class);
-         User user1 = new User("LeeYoungJin", "이영진", "1234");
-         User user2 = new User("KimYoungJin", "김영진", "5678");
-
          dao.deleteALl();
          assertThat(dao.getCount(), is(0));
 
@@ -43,13 +59,6 @@ class UserDaoTest {
 
      @Test
     void count() throws SQLException {
-         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
-         UserDao dao = context.getBean("userDao", UserDao.class);
-
-         User user1 = new User("LeeYoungJin", "이영진", "1234");
-         User user2 = new User("KimYoungJin", "김영진", "5678");
-         User user3 = new User("ParkYoungJin", "박영진", "9012");
-
          dao.deleteALl();
          assertThat(dao.getCount(), is(0));
 
@@ -68,8 +77,6 @@ class UserDaoTest {
 
      @Test
     void getUserFailure() throws SQLException {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
-         UserDao dao = context.getBean("userDao", UserDao.class);
          dao.deleteALl();
          assertThat(dao.getCount(), is(0));
 
