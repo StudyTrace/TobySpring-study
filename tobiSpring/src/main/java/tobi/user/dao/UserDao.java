@@ -56,28 +56,73 @@ public class UserDao {
 
 
     public void deleteALl() throws SQLException {
-        Connection c = dataSource.getConnection();
-        PreparedStatement ps = c.prepareStatement("delete from users");
-        ps.executeUpdate();
-        ps.close();
-        c.close();
+        Connection c = null;
+        PreparedStatement ps =null;
+
+        try {
+            c = dataSource.getConnection();
+            ps = c.prepareStatement("delete from users");
+            ps.executeUpdate();
+        }catch(SQLException e){
+            throw e;
+        }finally {
+            if(ps!=null){
+                try {
+                    ps.close();// 리소스를 반환, 반환하지않는다면 DB풀이 어느샌가 꽉찰수있다.
+                } catch (SQLException e) {
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+
+                }
+            }
+
+
+        }
     }
 
     public int getCount() throws SQLException {
+        Connection c = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-        Connection c = dataSource.getConnection();
-        PreparedStatement ps = c.prepareStatement("select count(*) from users");
+        try {
+            c = dataSource.getConnection();
+            ps = c.prepareStatement("select count(*) from users");
+            rs = ps.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        } catch (SQLException e) {
+            throw e;
+        }finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
 
-        ResultSet rs = ps.executeQuery();
-        rs.next();
+                }
+            }
 
-        int count = rs.getInt(1);
+            if(ps!=null){
+                try {
+                    ps.close();
+                } catch (SQLException e) {
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
 
-        rs.close();
-        ps.close();
-        c.close();
+                }
+            }
 
-        return count;
+
+        }
+
     }
 
 
