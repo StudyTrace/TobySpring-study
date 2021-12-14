@@ -35,7 +35,7 @@ public class UserDao {
             }
         };
 
-      jdbcContextWithStatementStrategy(new StatementStrategy() {
+      this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
             @Override
             public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
                 PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
@@ -79,13 +79,18 @@ public class UserDao {
 
 
     public void deleteALl() throws SQLException {
-        jdbcContextWithStatementStrategy(new StatementStrategy() {
+
+        exeCuteSql("delete from users"); //변하는 SQL문장
+    }
+
+    private void exeCuteSql(final String query) throws SQLException {
+        this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
             @Override
             public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
                 return c.prepareStatement("delete from users");
             }
         });
-
+        //변하지 않는 콜백 클래스 정의와 오브젝트 생성
 
     }
 
