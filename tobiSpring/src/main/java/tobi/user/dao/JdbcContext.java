@@ -9,7 +9,7 @@ public class JdbcContext {
 
     private DataSource dataSource;
 
-    public JdbcContext(DataSource dataSource) {
+    public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -40,6 +40,17 @@ public class JdbcContext {
 
 
         }
+
+    }
+
+    public void exeCuteSql(final String query) throws SQLException {
+        workWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                return c.prepareStatement(query);
+            }
+        });
+        //변하지 않는 콜백 클래스 정의와 오브젝트 생성
 
     }
 }

@@ -17,8 +17,11 @@ public class UserDao {
     }
 
     public void setDataSource(DataSource dataSource) {
+        this.jdbcContext = new JdbcContext();
+        this.jdbcContext.setDataSource(dataSource);
         this.dataSource = dataSource;
     }
+
 
 
 
@@ -80,19 +83,9 @@ public class UserDao {
 
     public void deleteALl() throws SQLException {
 
-        exeCuteSql("delete from users"); //변하는 SQL문장
+        this.jdbcContext.exeCuteSql("delete from users"); //변하는 SQL문장
     }
 
-    private void exeCuteSql(final String query) throws SQLException {
-        this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
-            @Override
-            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-                return c.prepareStatement("delete from users");
-            }
-        });
-        //변하지 않는 콜백 클래스 정의와 오브젝트 생성
-
-    }
 
     public int getCount() throws SQLException {
         Connection c = null;
