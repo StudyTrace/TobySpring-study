@@ -7,7 +7,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 
 
-public abstract class UserDao {
+public class UserDao {
 
     private DataSource dataSource; // 인터페이스이므로 구체적인 클래스정보를 알필요가없다.
 
@@ -18,16 +18,8 @@ public abstract class UserDao {
 
 
     public void add(User user) throws SQLException {
-        Connection c = dataSource.getConnection();
-        PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
-        ps.setString(1, user.getId());
-        ps.setString(2, user.getName());
-        ps.setString(3, user.getPassword());
-
-        ps.executeUpdate();
-        ps.close();
-        c.close();
-
+        StatementStrategy st = new AddStatement(user);
+        jdbcContextWithStatementStrategy(st);
     }
 
     public User get(String id) throws SQLException {
@@ -56,32 +48,10 @@ public abstract class UserDao {
 
 
     public void deleteALl() throws SQLException {
-        Connection c = null;
-        PreparedStatement ps =null;
 
-        try {
-            c = dataSource.getConnection();
-            ps = makeStatement(c);
-            ps.executeUpdate();
-        }catch(SQLException e){
-            throw e;
-        }finally {
-            if(ps!=null){
-                try {
-                    ps.close();// 리소스를 반환, 반환하지않는다면 DB풀이 어느샌가 꽉찰수있다.
-                } catch (SQLException e) {
-                }
-            }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e) {
+        StatementStrategy st = new DeleteAllStatement();
+        jdbcContextWithStatementStrategy(st);
 
-                }
-            }
-
-
-        }
     }
 
     public int getCount() throws SQLException {
@@ -126,8 +96,36 @@ public abstract class UserDao {
     }
 
 
-    abstract PreparedStatement makeStatement(Connection c) throws SQLException;
+    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
+        Connection c = null;
+        PreparedStatement ps = null;
 
+        try {
+            c = dataSource.getConnection();
+            ps = stmt.makePreparedStatement(c);
+            ps.executeUpdate();
+        }catch(SQLException e){
+            throw e;
+        }finally {
+            if(ps!=null){
+                try {
+                    ps.close();// 리소스를 반환, 반환하지않는다면 DB풀이 어느샌가 꽉찰수있다.
+                } catch (SQLException e) {
+                }
+            }
+            if (c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e) {
+
+                }
+            }
+
+
+        }
+
+
+    }
 
 
 }
