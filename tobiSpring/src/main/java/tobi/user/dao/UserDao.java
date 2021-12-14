@@ -1,6 +1,10 @@
 package tobi.user.dao;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import tobi.user.domain.User;
 
 import javax.sql.DataSource;
@@ -10,15 +14,10 @@ import java.sql.*;
 public class UserDao {
 
     private DataSource dataSource; // 인터페이스이므로 구체적인 클래스정보를 알필요가없다.
-    private JdbcContext jdbcContext;
-
-    public void setJdbcContext(JdbcContext jdbcContext) {
-        this.jdbcContext = jdbcContext;
-    }
+    private JdbcTemplate jdbcTemplate;
 
     public void setDataSource(DataSource dataSource) {
-        this.jdbcContext = new JdbcContext();
-        this.jdbcContext.setDataSource(dataSource);
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.dataSource = dataSource;
     }
 
@@ -26,34 +25,8 @@ public class UserDao {
 
 
     public void add(final User user) throws SQLException {
-
-        StatementStrategy st = new StatementStrategy() {
-            @Override
-            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-                PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
-                ps.setString(1, user.getId());
-                ps.setString(2, user.getName());
-                ps.setString(3, user.getPassword());
-                return ps;
-            }
-        };
-
-      this.jdbcContext.workWithStatementStrategy(new StatementStrategy() {
-            @Override
-            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
-                PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
-                ps.setString(1, user.getId());
-                ps.setString(2, user.getName());
-                ps.setString(3, user.getPassword());
-                return ps;
-            }
-        });
-
+        this.jdbcTemplate.update("insert into users(id, name, password) values(?,?,?)", user.getId(), user.getName(), user.getPassword());
         }
-
-    /**
-     * 새로운 클래스를 매번 생성하는것이아닌 익명 내부클래스로 만들었다.
-     */
 
 
     public User get(String id) throws SQLException {
@@ -83,49 +56,26 @@ public class UserDao {
 
     public void deleteALl() throws SQLException {
 
-        this.jdbcContext.exeCuteSql("delete from users"); //변하는 SQL문장
+        this.jdbcTemplate.update("delete from users");
+
     }
 
 
     public int getCount() throws SQLException {
-        Connection c = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
 
-        try {
-            c = dataSource.getConnection();
-            ps = c.prepareStatement("select count(*) from users");
-            rs = ps.executeQuery();
-            rs.next();
-            return rs.getInt(1);
-        } catch (SQLException e) {
-            throw e;
-        }finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-
-                }
+        return this.jdbcTemplate.query(new PreparedStatementCreator() {
+            @Override
+            public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+                return con.prepareStatement("select count(*) from users");
             }
-
-            if(ps!=null){
-                try {
-                    ps.close();
-                } catch (SQLException e) {
-                }
+        }, new ResultSetExtractor<Integer>() {
+            @Override
+            public Integer extractData(ResultSet rs) throws SQLException, DataAccessException {
+                rs.next();
+                return rs.getInt(1);
             }
-            if (c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e) {
-
-                }
-            }
-
-
-        }
-
+        });
+        
     }
 
 
