@@ -7,7 +7,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 
 
-public class UserDao {
+public abstract class UserDao {
 
     private DataSource dataSource; // 인터페이스이므로 구체적인 클래스정보를 알필요가없다.
 
@@ -61,7 +61,7 @@ public class UserDao {
 
         try {
             c = dataSource.getConnection();
-            ps = c.prepareStatement("delete from users");
+            ps = makeStatement(c);
             ps.executeUpdate();
         }catch(SQLException e){
             throw e;
@@ -124,6 +124,9 @@ public class UserDao {
         }
 
     }
+
+
+    abstract PreparedStatement makeStatement(Connection c) throws SQLException;
 
 
 
