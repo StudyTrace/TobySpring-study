@@ -10,6 +10,11 @@ import java.sql.*;
 public class UserDao {
 
     private DataSource dataSource; // 인터페이스이므로 구체적인 클래스정보를 알필요가없다.
+    private JdbcContext jdbcContext;
+
+    public void setJdbcContext(JdbcContext jdbcContext) {
+        this.jdbcContext = jdbcContext;
+    }
 
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -17,10 +22,36 @@ public class UserDao {
 
 
 
-    public void add(User user) throws SQLException {
-        StatementStrategy st = new AddStatement(user);
-        jdbcContextWithStatementStrategy(st);
-    }
+    public void add(final User user) throws SQLException {
+
+        StatementStrategy st = new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?,?,?)");
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+                return ps;
+            }
+        };
+
+      jdbcContextWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+                return ps;
+            }
+        });
+
+        }
+
+    /**
+     * 새로운 클래스를 매번 생성하는것이아닌 익명 내부클래스로 만들었다.
+     */
+
 
     public User get(String id) throws SQLException {
         Connection c = dataSource.getConnection();
@@ -48,9 +79,13 @@ public class UserDao {
 
 
     public void deleteALl() throws SQLException {
+        jdbcContextWithStatementStrategy(new StatementStrategy() {
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                return c.prepareStatement("delete from users");
+            }
+        });
 
-        StatementStrategy st = new DeleteAllStatement();
-        jdbcContextWithStatementStrategy(st);
 
     }
 
