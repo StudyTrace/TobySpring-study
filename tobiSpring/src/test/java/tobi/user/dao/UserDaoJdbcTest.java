@@ -148,4 +148,26 @@ class UserDaoJdbcTest {
     }
 
 
+    @Test
+    void update() {
+        dao.deleteAll();
+
+        dao.add(user1); // 수정할 유저
+        dao.add(user2); // 수정하지 않을 유저
+
+        user1.setName("정자수");
+        user1.setPassword("1234");
+        user1.setLevel(Level.GOLD);
+        user1.setLogin(1000);
+        user1.setRecommend(999);
+        dao.update(user1);
+
+        User user1update = dao.get(user1.getId());
+        checkSumUser(user1, user1update);
+        User user2same = dao.get(user2.getId());
+        checkSumUser(user2, user2same);
+
+    }
+
+
 }
