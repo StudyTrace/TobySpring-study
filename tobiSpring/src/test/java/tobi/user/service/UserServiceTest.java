@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.PlatformTransactionManager;
 import tobi.user.dao.DaoFactory;
 import tobi.user.dao.UserDao;
 import tobi.user.domain.Level;
@@ -26,6 +27,9 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 @ExtendWith(SpringExtension.class) // @Runwith 대체
 @ContextConfiguration(classes = {DaoFactory.class})
  class UserServiceTest {
+
+    @Autowired
+    PlatformTransactionManager transactionManager;
 
     @Autowired
     UserService userService;
@@ -125,7 +129,7 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
     void upgradeAllOrNothing() throws SQLException {
         UserService testUserService = new TestUserService(users.get(3).getId());
         testUserService.setUserDao(this.userDao);
-        testUserService.setDataSource(this.dataSource);
+        testUserService.setTransactionManager(transactionManager);
         userDao.deleteAll();
         for (User user : users) {
             userDao.add(user);

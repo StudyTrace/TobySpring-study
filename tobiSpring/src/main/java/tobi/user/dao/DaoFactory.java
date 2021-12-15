@@ -2,6 +2,7 @@ package tobi.user.dao;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import tobi.user.service.UserService;
 
@@ -14,8 +15,15 @@ public class DaoFactory {
     public UserService userService() {
         UserService userService = new UserService();
         userService.setUserDao(userDao());
-        userService.setDataSource(dataSource());
+        userService.setTransactionManager(transactionManager());
         return userService;
+    }
+
+    @Bean
+    public DataSourceTransactionManager transactionManager() {
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+        dataSourceTransactionManager.setDataSource(dataSource());
+        return dataSourceTransactionManager;
     }
 
     @Bean

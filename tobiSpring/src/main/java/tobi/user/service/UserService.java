@@ -32,18 +32,8 @@ public class UserService {
 
     public void upgradeLevels() throws SQLException {
 
-        PlatformTransactionManager transactionManager = new DataSourceTransactionManager(dataSource); // JDBC트랜잭션 추상오브젝트 생성
 
-        /**
-         * PlatformTransactionManager(스프링이 제공하는 트랜잭션 경계설정을 위한 추상인터페이스 )로 시작한 트랜잭션은 트랜낵션 동기화 저장소에 저장된다.
-         * PlatformTransactionManager를 구현한 DatasourceTransactionManager 오브젝트는 JdbcTemplate에서 사용될수잇는 방식으로 트랜잭션을 관리해준다.
-         */
-//
-//        TransactionSynchronizationManager.initSynchronization(); // 트랜잭션 동기화 관리자를 이용해 동기화 작업을 초기화
-//        Connection c = DataSourceUtils.getConnection(dataSource); // DB커넥션을 생성하고 트랜잭션 시작 , 이후의 작업은 모두 여기서 시작한 트랜잭션 안에서 진행된다.
-//        c.setAutoCommit(false);
-
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
+        TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         try {
             List<User> users = userDao.getAll();
@@ -52,9 +42,9 @@ public class UserService {
                     upgradeLevel(user);
                 }
             }
-            transactionManager.commit(status);
+            this.transactionManager.commit(status);
         } catch (Exception e) {
-            transactionManager.rollback(status); // 예외발생시 롤백
+            this.transactionManager.rollback(status); // 예외발생시 롤백
             throw e;
         }
 
