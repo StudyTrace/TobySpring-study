@@ -9,6 +9,9 @@ import java.util.List;
 public class UserService {
     UserDao userDao;
 
+    public static final int MIN_LOGCOUNT_FOR_SILVER = 50;
+    public static final int MIN_RECCOMEND_FOR_GOLD = 30;
+
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
     }
@@ -33,9 +36,9 @@ public class UserService {
         Level currentLevel = user.getLevel();
      switch (currentLevel){
          case BASIC:
-             return (user.getLogin() >= 50);
+             return (user.getLogin() >= MIN_LOGCOUNT_FOR_SILVER);
          case SILVER:
-             return (user.getRecommend() >= 30);
+             return (user.getRecommend() >= MIN_RECCOMEND_FOR_GOLD);
          case GOLD:
              return false;
          default: throw new IllegalArgumentException("Unknown Level: " + currentLevel); // 현재 로직에서 다룰수없는 레벨이면 예외
