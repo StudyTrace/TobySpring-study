@@ -32,4 +32,13 @@ public class UserService {
             if(changed) {userDao.update(user);} // 레벨변경이있을때만 update() 호출
         }
     }
+
+    public void add(User user) {
+
+        if (user.getLevel() == null) {
+            user.setLevel(Level.BASIC);
+        }
+        userDao.add(user);
+
+    }
 }
