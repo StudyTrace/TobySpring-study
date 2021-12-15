@@ -15,3 +15,6 @@ tobiSpring/src/main/java/tobi/user/User.java
 tobiSpring/src/main/java/tobi/user/UserDao.java
 tobiSpring/src/main/java/tobi/user/UserDaoTest.java
 tobiSpring/src/main/java/tobi/user/DaoFactory.java
+tobiSpring/src/main/java/tobi/whiteship/BookRepository.java
+tobiSpring/src/main/java/tobi/whiteship/BookService.java
+tobiSpring/src/main/java/tobi/whiteship/DemoApp.java

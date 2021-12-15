@@ -17,6 +17,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static tobi.user.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
 import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
@@ -93,11 +94,50 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
         assertThat(userWithLevelRead.getLevel(), is(userWithLevel.getLevel()));
         assertThat(userWithoutLevelRead.getLevel(), is(Level.BASIC));
 
-
-
-
-
     }
+
+    static class TestUserService extends UserService {
+        private String id;
+
+        public TestUserService(String id) {
+            this.id = id;
+        }
+
+        @Override
+        protected void upgradeLevel(User user) {
+            if (user.getId().equals(this.id)) {
+                throw new TestUserServiceException();
+            }
+            super.upgradeLevel(user);
+        }
+    }
+
+    static class TestUserServiceException extends RuntimeException {
+    }
+
+
+    @Test
+    void upgradeAllOrNothing() {
+        UserService testUserService = new TestUserService(users.get(3).getId());
+        testUserService.setUserDao(this.userDao);
+        userDao.deleteAll();
+        for (User user : users) {
+            userDao.add(user);
+        }
+
+        try {
+            testUserService.upgradeLevels();
+            fail("TestUserServiceException expected"); // TestUserService는 업그레이드작업중 예외발생해야함. 정상종료면 문제있으니 fail
+
+        } catch (TestUserServiceException e) { // TestUserSercice가 던져주는 예외를 잡아서 계속 진행되도록 한다. 그외의 예외라면 테스트실패
+
+        }
+        checkLevelUpgraded(users.get(1), false); // 예외가 발생하기전에 레벨변경이 있었던 사용자의 레벨이 처음상태로 바뀌었나 확인
+    }
+
+
+
+
 
 
 }
