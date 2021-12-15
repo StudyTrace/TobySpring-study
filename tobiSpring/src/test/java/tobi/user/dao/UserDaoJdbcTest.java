@@ -26,6 +26,7 @@ class UserDaoJdbcTest {
     @Autowired
     private ApplicationContext context;
 
+
     /**
      * ApplicationContext 가 메소드를 실행할때마다 생성되는부분을 리팩토링하였다.
      */
@@ -168,6 +169,11 @@ class UserDaoJdbcTest {
         checkSumUser(user2, user2same);
 
     }
+
+
+
+
+
 
 
 }

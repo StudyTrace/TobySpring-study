@@ -3,11 +3,19 @@ package tobi.user.dao;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import tobi.user.service.UserService;
 
 import javax.sql.DataSource;
 
 @Configuration
 public class DaoFactory {
+
+    @Bean
+    public UserService userService() {
+        UserService userService = new UserService();
+        userService.setUserDao(userDao());
+        return userService;
+    }
 
     @Bean
     public UserDaoJdbc userDao()
