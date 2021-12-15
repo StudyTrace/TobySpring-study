@@ -11,6 +11,8 @@ import tobi.user.dao.UserDao;
 import tobi.user.domain.Level;
 import tobi.user.domain.User;
 
+import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,6 +32,9 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
     @Autowired
     UserDao userDao;
+
+    @Autowired
+    DataSource dataSource;
 
     List<User> users;
 
@@ -52,7 +57,7 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
     }
 
     @Test
-    void upgradeLevels() {
+    void upgradeLevels() throws SQLException {
         userDao.deleteAll();
         for (User user : users) {
             userDao.add(user);
@@ -117,9 +122,10 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
 
     @Test
-    void upgradeAllOrNothing() {
+    void upgradeAllOrNothing() throws SQLException {
         UserService testUserService = new TestUserService(users.get(3).getId());
         testUserService.setUserDao(this.userDao);
+        testUserService.setDataSource(this.dataSource);
         userDao.deleteAll();
         for (User user : users) {
             userDao.add(user);

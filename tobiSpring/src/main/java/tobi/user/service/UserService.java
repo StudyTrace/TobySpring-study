@@ -50,7 +50,7 @@ public class UserService {
             throw e;
 
         }finally {
-            DataSourceUtils.releaseConnection(c, dataSource); // 안전하게 DB커넥션을 닫음 
+            DataSourceUtils.releaseConnection(c, dataSource); // 안전하게 DB커넥션을 닫음
             TransactionSynchronizationManager.unbindResource(this.dataSource);
             TransactionSynchronizationManager.clearSynchronization();  // 동기화 작업 종료 및 정리
         }
