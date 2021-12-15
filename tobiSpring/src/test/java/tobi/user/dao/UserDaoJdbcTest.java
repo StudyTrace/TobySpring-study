@@ -44,9 +44,9 @@ class UserDaoJdbcTest {
     void setUp() {
         this.dao = context.getBean("userDao", UserDaoJdbc.class);
         System.out.println("before 실행");
-        this.user1 = new User("LeeYoungJin", "이영진", "1234", Level.BASIC, 1, 0);
-        this.user2 = new User("KimYoungJin", "김영진", "5678", Level.SILVER, 55, 10);
-        this.user3 = new User("ParkYoungJin", "박영진", "9012", Level.GOLD, 100, 40);
+        this.user1 = new User("LeeYoungJin", "이영진", "1234", Level.BASIC, 1, 0,"이메일1");
+        this.user2 = new User("KimYoungJin", "김영진", "5678", Level.SILVER, 55, 10,"이메일2");
+        this.user3 = new User("ParkYoungJin", "박영진", "9012", Level.GOLD, 100, 40,"이메일3");
         System.out.println(this.context);
         System.out.println(this);
         System.out.println("아이디뽑기" + this.user1.getId() + this.user2.getId() + this.user3.getId());
