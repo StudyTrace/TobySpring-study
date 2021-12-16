@@ -23,8 +23,8 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static tobi.user.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
-import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
+import static tobi.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
+import static tobi.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
 @ExtendWith(SpringExtension.class) // @Runwith 대체
 @ContextConfiguration(classes = {DaoFactory.class})
@@ -32,8 +32,9 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
     @Autowired MailSender mailSender;
     @Autowired PlatformTransactionManager transactionManager;
-    @Autowired UserService userService;
+    @Autowired UserServiceImpl userServiceImpl;
     @Autowired UserDao userDao;
+    @Autowired UserService userService;
 
     List<User> users;
 
@@ -59,9 +60,9 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
         }
 
         MockMailSender mockMailSender = new MockMailSender();
-        userService.setMailSender(mockMailSender); //메일발송결과를 테스트할수있도록 목오브젝트를 만들어 userService의 의존오브젝트로 주입해준다.
+        userServiceImpl.setMailSender(mockMailSender); //메일발송결과를 테스트할수있도록 목오브젝트를 만들어 userService의 의존오브젝트로 주입해준다.
 
-        userService.upgradeLevels();
+        userServiceImpl.upgradeLevels();
 
         checkLevelUpgraded(users.get(0), false);
         checkLevelUpgraded(users.get(1), true);
@@ -93,8 +94,8 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
         User userWithoutLevel = users.get(0);
         userWithoutLevel.setLevel(null);
 
-        userService.add(userWithLevel);
-        userService.add(userWithoutLevel);
+        userServiceImpl.add(userWithLevel);
+        userServiceImpl.add(userWithoutLevel);
 
         User userWithLevelRead = userDao.get(userWithLevel.getId());
         User userWithoutLevelRead = userDao.get(userWithoutLevel.getId());
@@ -104,7 +105,7 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
     }
 
-    static class TestUserService extends UserService {
+    static class TestUserService extends UserServiceImpl {
         private String id;
 
         public TestUserService(String id) {
@@ -127,18 +128,21 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
     @Test
     void upgradeAllOrNothing() throws Exception {
 
-
-        UserService testUserService = new TestUserService(users.get(3).getId());
+        TestUserService testUserService = new TestUserService(users.get(3).getId());
         testUserService.setMailSender(mailSender);
         testUserService.setUserDao(this.userDao);
-        testUserService.setTransactionManager(transactionManager);
+
+        UserServiceTx txUserService = new UserServiceTx();
+        txUserService.setTransactionManager(transactionManager);
+        txUserService.setUserService(testUserService);
+
         userDao.deleteAll();
         for (User user : users) {
             userDao.add(user);
         }
 
         try {
-            testUserService.upgradeLevels();
+            txUserService.upgradeLevels();
             fail("TestUserServiceException expected"); // TestUserService는 업그레이드작업중 예외발생해야함. 정상종료면 문제있으니 fail
 
         } catch (TestUserServiceException e) { // TestUserSercice가 던져주는 예외를 잡아서 계속 진행되도록 한다. 그외의 예외라면 테스트실패
