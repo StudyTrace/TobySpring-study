@@ -9,7 +9,6 @@ import tobi.user.dao.UserDao;
 import tobi.user.domain.Level;
 import tobi.user.domain.User;
 
-import java.sql.SQLException;
 import java.util.List;
 
 public class UserService {
@@ -34,18 +33,12 @@ public class UserService {
     }
 
 
-    public void upgradeLevels() throws SQLException {
-
+    public void upgradeLevels() throws Exception {
 
         TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition());
 
         try {
-            List<User> users = userDao.getAll();
-            for (User user : users) {
-                if (canUpgradeLevel(user)) {
-                    upgradeLevel(user);
-                }
-            }
+            upgradeLevelsInternal();
             this.transactionManager.commit(status);
         } catch (Exception e) {
             this.transactionManager.rollback(status); // 예외발생시 롤백
@@ -53,6 +46,15 @@ public class UserService {
         }
 
 
+    }
+
+    private void upgradeLevelsInternal() {
+        List<User> users = userDao.getAll();
+        for (User user : users) {
+            if (canUpgradeLevel(user)) {
+                upgradeLevel(user);
+            }
+        }
     }
 
     protected void upgradeLevel(User user) {

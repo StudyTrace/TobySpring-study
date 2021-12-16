@@ -4,7 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -13,13 +16,11 @@ import tobi.user.dao.UserDao;
 import tobi.user.domain.Level;
 import tobi.user.domain.User;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static tobi.user.service.UserService.MIN_LOGCOUNT_FOR_SILVER;
@@ -49,12 +50,17 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
     }
 
     @Test
-    void upgradeLevels() throws SQLException {
+    @DirtiesContext // 컨텍스트의 DI설정을 변경하는 테스트라는것을 알려준다.
+    void upgradeLevels() throws Exception {
         userDao.deleteAll();
         for (User user : users) {
             userDao.add(user);
 
         }
+
+        MockMailSender mockMailSender = new MockMailSender();
+        userService.setMailSender(mockMailSender); //메일발송결과를 테스트할수있도록 목오브젝트를 만들어 userService의 의존오브젝트로 주입해준다.
+
         userService.upgradeLevels();
 
         checkLevelUpgraded(users.get(0), false);
@@ -62,6 +68,11 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
         checkLevelUpgraded(users.get(2), false);
         checkLevelUpgraded(users.get(3), true);
         checkLevelUpgraded(users.get(4), false);
+
+        List<String> requests = mockMailSender.getRequests();
+        assertThat(requests.size(), is(2));
+        assertThat(requests.get(0), is(users.get(1).getEmail()));
+        assertThat(requests.get(1), is(users.get(3).getEmail()));
 
     }
 
@@ -114,7 +125,7 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
 
     @Test
-    void upgradeAllOrNothing() throws SQLException {
+    void upgradeAllOrNothing() throws Exception {
 
 
         UserService testUserService = new TestUserService(users.get(3).getId());
@@ -135,6 +146,30 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
         }
         checkLevelUpgraded(users.get(1), false); // 예외가 발생하기전에 레벨변경이 있었던 사용자의 레벨이 처음상태로 바뀌었나 확인
     }
+
+    static class MockMailSender implements MailSender {
+
+        private List<String> requests =   new ArrayList<String>();
+
+        public List<String> getRequests() {
+            return requests;
+        }
+
+        /**
+         *  dummyMailSender처럼 아무것도 없지만, 메일주소를 저장해두고 읽을수있게끔한다는 차이점이있다.
+         */
+
+        @Override
+        public void send(SimpleMailMessage mailMessage) throws MailException {
+            requests.add(mailMessage.getTo()[0]);
+        }
+
+        @Override
+        public void send(SimpleMailMessage... mailMessages) throws MailException {
+
+        }
+    }
+
 
 
 
