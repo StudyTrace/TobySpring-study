@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import tobi.user.service.DummyMailSender;
 import tobi.user.service.UserService;
 
 import javax.sql.DataSource;
@@ -16,7 +17,14 @@ public class DaoFactory {
         UserService userService = new UserService();
         userService.setUserDao(userDao());
         userService.setTransactionManager(transactionManager());
+        userService.setMailSender(mailSender());
         return userService;
+    }
+
+    @Bean
+    public DummyMailSender mailSender() {
+        DummyMailSender dummyMailSender = new DummyMailSender();
+        return dummyMailSender;
     }
 
     @Bean

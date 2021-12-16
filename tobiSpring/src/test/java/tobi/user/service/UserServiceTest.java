@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.MailSender;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -28,26 +29,13 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 @ContextConfiguration(classes = {DaoFactory.class})
  class UserServiceTest {
 
-    @Autowired
-    PlatformTransactionManager transactionManager;
-
-    @Autowired
-    UserService userService;
-
-    @Autowired
-    UserDao userDao;
-
-    @Autowired
-    DataSource dataSource;
+    @Autowired MailSender mailSender;
+    @Autowired PlatformTransactionManager transactionManager;
+    @Autowired UserService userService;
+    @Autowired UserDao userDao;
 
     List<User> users;
 
-    @Test
-    void bean() {
-
-        assertThat(this.userService, is(notNullValue()));
-
-    }
 
     @BeforeEach
     void setUp() {
@@ -127,7 +115,10 @@ import static tobi.user.service.UserService.MIN_RECCOMEND_FOR_GOLD;
 
     @Test
     void upgradeAllOrNothing() throws SQLException {
+
+
         UserService testUserService = new TestUserService(users.get(3).getId());
+        testUserService.setMailSender(mailSender);
         testUserService.setUserDao(this.userDao);
         testUserService.setTransactionManager(transactionManager);
         userDao.deleteAll();
