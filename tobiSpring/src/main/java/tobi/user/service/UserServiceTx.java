@@ -7,7 +7,7 @@ import tobi.user.domain.User;
 
 public class UserServiceTx implements UserService{
 
-    UserService userService;
+    UserService userService; // 타겟 오브젝트
     PlatformTransactionManager transactionManager;
 
     public void setTransactionManager(PlatformTransactionManager transactionManager) {
@@ -19,22 +19,23 @@ public class UserServiceTx implements UserService{
     }
 
     @Override
-    public void add(User user) {
+    public void add(User user) { //메소드구현 + 위임
         userService.add(user);
 
     }
 
     @Override
-    public void upgradeLevels() throws Exception {
+    public void upgradeLevels() throws Exception { // 메소드 구현
 
-        TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition());
+        TransactionStatus status = this.transactionManager.getTransaction(new DefaultTransactionDefinition()); //부가기능수행
         try {
-            userService.upgradeLevels();
 
-            this.transactionManager.commit(status);
-        } catch (RuntimeException e) {
-            this.transactionManager.rollback(status);
-            throw e;
+            userService.upgradeLevels(); // 위임
+
+            this.transactionManager.commit(status);  // 부가기능수행
+        } catch (RuntimeException e) {//
+            this.transactionManager.rollback(status);//
+            throw e;//
         }
     }
 
