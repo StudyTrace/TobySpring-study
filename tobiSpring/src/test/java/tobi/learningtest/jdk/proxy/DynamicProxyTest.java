@@ -83,16 +83,22 @@ class DynamicProxyTest {
 
 
     static class UppercaseHandler implements InvocationHandler {
-        Hello target;
+        Object target;
 
-        public UppercaseHandler(Hello target) {
+        private UppercaseHandler(Object target) {
             this.target = target;   // 타깃 오브젝트를 주입
         }
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            String ret = (String) method.invoke(target, args); // 타깃으로 위임
-            return ret.toUpperCase(); // 부가기능 제공
+            Object ret = method.invoke(target, args); // 타깃으로 위임
+            if(ret instanceof String && method.getName().startsWith("say")){
+                return ((String)ret).toUpperCase(); // 부가기능 제공
+            }
+            else{
+                return ret;
+            }
+
         }
     }
 
