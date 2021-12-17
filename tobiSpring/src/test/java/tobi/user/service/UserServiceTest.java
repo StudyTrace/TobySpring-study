@@ -3,6 +3,8 @@ package tobi.user.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
@@ -23,6 +25,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
 import static tobi.user.service.UserServiceImpl.MIN_LOGCOUNT_FOR_SILVER;
 import static tobi.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
 
@@ -53,28 +56,44 @@ import static tobi.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
     @Test
     @DirtiesContext // 컨텍스트의 DI설정을 변경하는 테스트라는것을 알려준다.
     void upgradeLevels() throws Exception {
-        userDao.deleteAll();
-        for (User user : users) {
-            userDao.add(user);
 
+        UserServiceImpl userServiceImpl = new UserServiceImpl();
+
+        userDao.deleteAll();
+        for (User user : users) {   // DB테스트 데이터 준비
+            userDao.add(user);
         }
+
+        MockUserDao mockUserDao = new MockUserDao(this.users);
+        userServiceImpl.setUserDao(mockUserDao);
+
 
         MockMailSender mockMailSender = new MockMailSender();
         userServiceImpl.setMailSender(mockMailSender); //메일발송결과를 테스트할수있도록 목오브젝트를 만들어 userService의 의존오브젝트로 주입해준다.
 
         userServiceImpl.upgradeLevels();
 
-        checkLevelUpgraded(users.get(0), false);
-        checkLevelUpgraded(users.get(1), true);
-        checkLevelUpgraded(users.get(2), false);
-        checkLevelUpgraded(users.get(3), true);
-        checkLevelUpgraded(users.get(4), false);
+        List<User> updated = mockUserDao.getUpdated();
+        assertThat(updated.size(), is(2));
+        checkUserAndLevel(updated.get(0), "joytouch", Level.SILVER);
+        checkUserAndLevel(updated.get(1), "madnite1", Level.GOLD);
+
 
         List<String> requests = mockMailSender.getRequests();
         assertThat(requests.size(), is(2));
         assertThat(requests.get(0), is(users.get(1).getEmail()));
-        assertThat(requests.get(1), is(users.get(3).getEmail()));
+        assertThat(requests.get(1), is(users.get(3).getEmail()));  // 목 오브젝트를 이용한 결과 확인
 
+
+        /**
+         *
+         */
+
+    }
+
+    private void checkUserAndLevel(User updated, String expectedId, Level expectedLevel) {
+        assertThat(updated.getId(), is(expectedId));
+        assertThat(updated.getLevel(), is(expectedLevel));
     }
 
     private void checkLevelUpgraded(User user, boolean upgraded) {
@@ -84,6 +103,36 @@ import static tobi.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
         }else {
             assertThat(userUpdate.getLevel(), is(user.getLevel())); // 업그레이드가 일어나지않았는지 확인
         }
+    }
+
+
+    @Test
+    void mockUpgradeLevels(){
+        UserServiceImpl userServiceImpl = new UserServiceImpl();
+
+        UserDao mockUserDao = mock(UserDao.class); // 다이내믹한 목 오브젝트 생성
+        when(mockUserDao.getAll()).thenReturn(this.users);  // 메소드의 리턴값 생성
+        userServiceImpl.setUserDao(mockUserDao); // DI
+
+        MailSender mockMailSender = mock(MailSender.class);
+        userServiceImpl.setMailSender(mockMailSender);
+
+        userServiceImpl.upgradeLevels();
+
+        verify(mockUserDao, times(2)).update(any(User.class)); // any = 파라미터를 무시하고 호출횟수만 확인할수있다.
+        verify(mockUserDao, times(2)).update(any(User.class));
+        verify(mockUserDao).update(users.get(1));
+        assertThat(users.get(1).getLevel(), is(Level.SILVER));
+        verify(mockUserDao).update(users.get(3));
+        assertThat(users.get(3).getLevel(), is(Level.GOLD));
+
+        ArgumentCaptor<SimpleMailMessage> mailMessageArg = ArgumentCaptor.forClass(SimpleMailMessage.class);
+        verify(mockMailSender, times(2)).send(mailMessageArg.capture()); //파라미터 정밀하게 확인하기위해 캡처도 할수있다.
+        List<SimpleMailMessage> mailMessages = mailMessageArg.getAllValues();
+        assertThat(mailMessages.get(0).getTo()[0], is(users.get(1).getEmail()));
+        assertThat(mailMessages.get(1).getTo()[0], is(users.get(3).getEmail()));
+
+
     }
 
     @Test
@@ -171,6 +220,41 @@ import static tobi.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
         @Override
         public void send(SimpleMailMessage... mailMessages) throws MailException {
 
+        }
+    }
+
+    static class MockUserDao implements UserDao{
+        private List<User> users; /// 레벨 업그레이드 후보 User오브젝트 목록
+        private List<User> updated = new ArrayList<>(); // 업그레이드 대상 오브젝트를 저장해둘 목록
+
+        public MockUserDao(List<User> users) {
+            this.users = users;
+        }
+
+        public List<User> getUpdated() {
+            return updated;
+        }
+
+        @Override
+        public void add(User user) { throw new UnsupportedOperationException();}
+
+        @Override
+        public User get(String id) {throw new UnsupportedOperationException();}
+
+        @Override
+        public List<User> getAll() {
+            return this.users;
+        }
+
+        @Override
+        public void deleteAll() {throw new UnsupportedOperationException(); }
+
+        @Override
+        public int getCount() { throw new UnsupportedOperationException();}
+
+        @Override
+        public void update(User user) {
+            updated.add(user);
         }
     }
 

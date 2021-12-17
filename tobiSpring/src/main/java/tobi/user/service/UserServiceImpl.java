@@ -6,6 +6,7 @@ import tobi.user.dao.UserDao;
 import tobi.user.domain.Level;
 import tobi.user.domain.User;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserServiceImpl implements UserService {
@@ -77,4 +78,6 @@ public class UserServiceImpl implements UserService {
         userDao.add(user);
 
     }
+
+
 }
