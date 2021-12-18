@@ -13,6 +13,13 @@ import javax.sql.DataSource;
 @Configuration
 public class DaoFactory {
 
+    @Bean
+     public MessageFactoryBean message() {
+        MessageFactoryBean messageFactoryBean = new MessageFactoryBean();
+        messageFactoryBean.setText("Factory Bean");
+        return messageFactoryBean;
+    }
+
 
     @Bean
     public UserServiceTx userService(){
