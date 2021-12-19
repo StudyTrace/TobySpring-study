@@ -15,7 +15,6 @@ public class DaoFactory {
 
 
 
-
     @Bean
      public MessageFactoryBean message() {
         MessageFactoryBean messageFactoryBean = new MessageFactoryBean();
