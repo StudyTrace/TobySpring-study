@@ -5,13 +5,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import tobi.user.service.DummyMailSender;
+import tobi.user.service.TxProxyFactoryBean;
 import tobi.user.service.UserServiceImpl;
-import tobi.user.service.UserServiceTx;
 
 import javax.sql.DataSource;
 
 @Configuration
 public class DaoFactory {
+
+
+
 
     @Bean
      public MessageFactoryBean message() {
@@ -22,10 +25,12 @@ public class DaoFactory {
 
 
     @Bean
-    public UserServiceTx userService(){
-        UserServiceTx userServiceTx = new UserServiceTx();
+    public TxProxyFactoryBean userService() throws ClassNotFoundException {
+        TxProxyFactoryBean userServiceTx = new TxProxyFactoryBean();
+        userServiceTx.setTarget(userServiceImpl());
         userServiceTx.setTransactionManager(transactionManager());
-        userServiceTx.setUserService(userServiceImpl());
+        userServiceTx.setPattern("upgradeLevels");
+        userServiceTx.setServiceInterface(Class.forName("tobi.user.service.UserService"));
         return userServiceTx;
     }
 

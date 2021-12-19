@@ -23,9 +23,6 @@ import static org.junit.Assert.assertThat;
     @Test
     void getMessageFromFactoryBean() {
         Object message = context.getBean("message");
-        System.out.println(message);
-        System.out.println(Message.class);
-        System.out.println();
 //        assertThat(message, is(Message.class));
         assertThat(message,instanceOf(Message.class));
         assertThat(((Message)message).getText(), is("Factory Bean"));
