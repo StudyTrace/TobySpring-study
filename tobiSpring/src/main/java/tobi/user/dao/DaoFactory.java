@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import tobi.learningtest.jdk.proxy.NameMatchClassMethodPointcut;
 import tobi.user.service.DummyMailSender;
 import tobi.user.service.TransactionAdvice;
 import tobi.user.service.TxProxyFactoryBean;
@@ -19,18 +20,27 @@ public class DaoFactory {
 
 
     @Bean
-    public TransactionAdvice transactionAdvice(){
+    public void DefaultAdvisorAutoProxyCreator(){}
+
+
+
+    @Bean
+
+    public TransactionAdvice transactionAdvice() {
         TransactionAdvice transactionAdvice = new TransactionAdvice();
         transactionAdvice.setTransactionManager(transactionManager());
         return transactionAdvice;
     }
 
     @Bean
-    public NameMatchMethodPointcut transactionPointcut() {
-        NameMatchMethodPointcut nameMatchMethodPointcut = new NameMatchMethodPointcut();
+    public NameMatchClassMethodPointcut transactionPointcut() {
+        NameMatchClassMethodPointcut nameMatchMethodPointcut = new NameMatchClassMethodPointcut();
+        nameMatchMethodPointcut.setMappedClassName("*ServiceImpl");
         nameMatchMethodPointcut.setMappedName("upgrade*");
         return nameMatchMethodPointcut;
     }
+
+
 
     @Bean
     public DefaultPointcutAdvisor transactionAdvisor() {
@@ -41,7 +51,7 @@ public class DaoFactory {
     }
 
     @Bean
-    public ProxyFactoryBean userService(){
+    public ProxyFactoryBean userService() {
         ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
         proxyFactoryBean.setTarget(userServiceImpl());
         proxyFactoryBean.setInterceptorNames("transactionAdvisor");
@@ -49,9 +59,8 @@ public class DaoFactory {
     }
 
 
-
     @Bean
-     public MessageFactoryBean message() {
+    public MessageFactoryBean message() {
         MessageFactoryBean messageFactoryBean = new MessageFactoryBean();
         messageFactoryBean.setText("Factory Bean");
         return messageFactoryBean;
@@ -90,9 +99,7 @@ public class DaoFactory {
     }
 
     @Bean
-    public UserDaoJdbc userDao()
-
-    {
+    public UserDaoJdbc userDao() {
         UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
         userDaoJdbc.setDataSource(dataSource());
         return userDaoJdbc;

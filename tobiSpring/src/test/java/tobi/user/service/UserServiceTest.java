@@ -189,21 +189,6 @@ import static tobi.user.service.UserServiceImpl.MIN_RECCOMEND_FOR_GOLD;
         txProxyFactoryBean.setTarget(testUserService);
         UserService txUserService =(UserService) txProxyFactoryBean.getObject();
 
-//
-//        TransactionHandler txHandler = new TransactionHandler();
-//        txHandler.setTarget(testUserService);
-//        txHandler.setTransactionManager(transactionManager);
-//        txHandler.setPattern("upgradeLevels");
-//
-//        /**
-//         * 트랜잭션 핸들러가 필요한 정보와 오브젝트를 DI해준다.
-//         */
-//
-//        UserService txUserService =(UserService) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{ UserService.class }, txHandler);
-//
-//        /**
-//         * UserService 인터페이스 타입의 다이내믹 프록시 생성
-//         */
 
 
         userDao.deleteAll();
