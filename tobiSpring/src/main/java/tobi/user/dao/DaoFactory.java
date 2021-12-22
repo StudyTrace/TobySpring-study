@@ -14,6 +14,8 @@ import tobi.user.service.TxProxyFactoryBean;
 import tobi.user.service.UserServiceImpl;
 
 import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class DaoFactory {
@@ -102,7 +104,14 @@ public class DaoFactory {
     public UserDaoJdbc userDao() {
         UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
         userDaoJdbc.setDataSource(dataSource());
-        userDaoJdbc.setSqlAdd("insert into users(id, name, password, level, login, recommend, email) values(?,?,?,?,?,?,?)");
+        Map<String, String> sqlMap = new HashMap<String, String>();
+        sqlMap.put("add", "insert into users(id, name, password, level, login, recommend, email) values(?,?,?,?,?,?,?)");
+        sqlMap.put("get", "select * from users where id=?");
+        sqlMap.put("getAll", "select * from users order by id");
+        sqlMap.put("deleteAll", "delete from users");
+        sqlMap.put("getCount", "select count(*) from users");
+        sqlMap.put("update", "update users set name=?, password=?, level=?, login=?, "+ "recommend=?, email=? where id =?");
+        userDaoJdbc.setSqlMap(sqlMap);
         return userDaoJdbc;
     }
 

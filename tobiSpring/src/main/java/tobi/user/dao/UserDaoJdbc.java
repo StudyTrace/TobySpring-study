@@ -8,12 +8,19 @@ import tobi.user.domain.User;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 
 
 public class UserDaoJdbc implements UserDao{
 
     private JdbcTemplate jdbcTemplate;
+    private Map<String, String> sqlMap;
     private String sqlAdd;
+
+
+    public void setSqlMap(Map<String, String> sqlMap) {
+        this.sqlMap = sqlMap;
+    }
 
     public void setSqlAdd(String sqlAdd) {
         this.sqlAdd = sqlAdd;
@@ -44,38 +51,38 @@ public class UserDaoJdbc implements UserDao{
 
 
     public void add(final User user)  {
-        this.jdbcTemplate.update(this.sqlAdd, user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail());
+        this.jdbcTemplate.update(this.sqlMap.get("add"), user.getId(), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail());
         }
 
 
 
     public User get(String id)  {
 
-        return this.jdbcTemplate.queryForObject("select * from users where id=?", new Object[]{id}, this.userMapper);
+        return this.jdbcTemplate.queryForObject(this.sqlMap.get("get"), new Object[]{id}, this.userMapper);
     }
 
     @Override
     public List<User> getAll() {
-        return this.jdbcTemplate.query("select * from users order by id", this.userMapper);
+        return this.jdbcTemplate.query(this.sqlMap.get("getAll"), this.userMapper);
 
     }
 
 
     public void deleteAll() {
-        this.jdbcTemplate.update("delete from users");
+        this.jdbcTemplate.update(this.sqlMap.get("deleteAll"));
     }
 
 
 
     public int getCount()  {
 
-        return this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
+        return this.jdbcTemplate.queryForObject(this.sqlMap.get("getCount"), Integer.class);
 
     }
 
     @Override
     public void update(User user) {
-        this.jdbcTemplate.update("update users set name=?, password=?, level=?, login=?, "+ "recommend=?, email=? where id =?", user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail(), user.getId());
+        this.jdbcTemplate.update(this.sqlMap.get("update"), user.getName(), user.getPassword(), user.getLevel().intValue(), user.getLogin(), user.getRecommend(), user.getEmail(), user.getId());
     }
 
 
