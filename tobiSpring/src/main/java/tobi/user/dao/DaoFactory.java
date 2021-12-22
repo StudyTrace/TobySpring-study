@@ -102,6 +102,7 @@ public class DaoFactory {
     public UserDaoJdbc userDao() {
         UserDaoJdbc userDaoJdbc = new UserDaoJdbc();
         userDaoJdbc.setDataSource(dataSource());
+        userDaoJdbc.setSqlAdd("insert into users(id, name, password, level, login, recommend, email) values(?,?,?,?,?,?,?)");
         return userDaoJdbc;
     }
 
