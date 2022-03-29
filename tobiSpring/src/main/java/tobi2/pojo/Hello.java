@@ -5,7 +5,7 @@ public class Hello {
     private Printer printer;
 
     public String sayHello() {
-        return "Hello" + name;
+        return "Hello " + name;
     }
 
     public void print() {

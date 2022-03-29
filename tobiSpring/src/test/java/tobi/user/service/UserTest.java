@@ -2,9 +2,7 @@ package tobi.user.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.dao.EmptyResultDataAccessException;
 import tobi.user.domain.Level;
-import tobi.user.domain.User;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
