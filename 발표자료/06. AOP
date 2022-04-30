@@ -1,0 +1,278 @@
+# 6.1 트랜잭션 코드의 분리
+
+
+5장에서 트랜잭션을 처리하는 코드가 추가되면서 
+UserService에 트랜잭션경계설정 + 비즈니스코드가 합쳐지는 상황이 발생하는데 
+그걸 분리하고싶다.
+UserService에는 2가지 관심사가있기때문에, 이것을 분리하기위해서는 UserService자체를 추상화해서 구현체를 분리시켜야한다. 
+
+UserService에 있는 트랜잭션코드, 비즈니스코드를 분리하기위해 UserService를 인터페이스로 변경하고
+트랜잭션 구현코드(UserServiceTx), 비즈니스 구현코드(UserServiceImpl)를 나누었다.
+
+# 6.2 고립된 단위테스트
+
+
+UserService를 테스트한다고 가정했을때 UserService에는 JDBC코드,트랜잭션매니저,메일클래스 가 의존되어있고
+이 세가지 오브젝트들도 자신의코드만 실행하는것이아닌 내부적으로 더욱더 의존하고있다.
+만약 UserService에 메소드가 더많다면? 내부적으로 더많이 의존하게될것이다.
+테스트의 단위를 최대한쪼개서하는것이 좋을것이다.
+
+**Mock객체로 단위테스트를 하자.**
+테스트대역을 만들어줌으로써 고립된 단위테스트로 정밀하게 테스트할수있고, 속도향상도 따라온다.
+직접 Mock객체를 만드는것보다 Mockito같은 Mock프레임워크를 이용하는것이 편리하다
+
+## 단위테스트, 통합테스트
+
+- 단위테스트를 먼저 고려하지만, 단위테스트를 만들기 너무 복잡한코드는 통합테스트를 고려하자
+
+
+# 6.3 다이내믹 프록시와 팩토리빈
+
+비즈니스코드와 트랜잭션코드를 분리할때 사용했던 방법에는 디자인패턴이 녹아있었다.
+
+전략패턴은 단순히 트랜잭션의 적용방식이 A가될수도있고B가될수도있는 확장성을 고려할순있지만 ,
+여전히 **트랜잭션을 적용한다는 사실은 코드에 남아있다.**
+완전히 분리하다보니 부가기능(트랜잭션코드)이 핵심기능(비즈니스코드)을 사용하는구조가 되었다.
+
+
+> 핵심기능은 부가기능을 가진 클래스자체를 알지못한다.
+분리는 잘 했지만, 클라이언트가 바로 핵심기능을 사용하면 부가기능이 적용되지못하기때문에
+부가기능이 마치 자신이 핵심기능인것처럼 꾸며서, 자신을 거쳐서 핵심기능을 사용하도록 만들게된다.
+부가기능을 **프록시**, 핵심기능을 **타깃**이라고 한다.
+
+### 데코레이터패턴
+- 타깃에 부가기능을 부여해주기위해 존재한다. (데코레이터패턴)
+=> 타깃과 클라이언트가 호출하는방법도 변경하지않은채 런타임시에 다음 위임대상을 주입받아서 부가기능을 추가할수있다. 
+
+부가기능 여러개를 런타임시에  덧붙여서  사용해줄수있게끔한다.
+UserServiceImpl 에 트랜잭션 부가기능을 제공해준 UserServiceTX를 추가한것도 데코레이터패턴 적용한것 
+
+### 프록시패턴 
+- 타깃에 접근하는 방법을 제어한다. 
+
+```java
+public interface Target {
+
+    List<Character> unmodifiable();
+}
+
+public class TargetImpl implements Target {
+
+    @Override
+    public List<Character> unmodifiable() {
+        List<Character> list = new ArrayList<Character>(); // 읽기전용으로 수정하고싶다.
+        return list;
+    }
+}
+
+```
+
+클라이언트에서는 타깃구현체를 가진 프록시로 접근합니다.
+```java
+public class Client {
+
+    public static void main(String[] args) {
+        Target target = new Proxy(new TargetImpl()); // 타겟구현체를 가지고 프록시로 먼저 접근한다
+        List<Character> afterList = target.unmodifiable(); 
+
+        /**
+         * add()나 remove()메소드를 호출하면 예외발생시킨다.
+         */
+
+        try {
+            System.out.println("add() 호출불가능");
+            afterList.add('z');
+        } catch (UnsupportedOperationException e) {
+            System.out.println("Exception : " + e);;
+        }
+    }
+}
+```
+
+타깃의 기능을 확장하거나 추가하지않는다. 클라이언트가 타깃에 접근하는 방식을 변경해준다. 
+```java
+public class Proxy implements Target {
+
+    private Target target ;
+
+    public Proxy(Target target) {
+        this.target  = target;
+    }
+    
+    @Override
+    public List<Character> unmodifiable() {
+        List<Character> beforeList = target.unmodifiable(); // 타겟구현체로 List를 생성한다
+        beforeList.add('x');
+        beforeList.add('y');
+        System.out.println("beforeList" + beforeList);
+
+        return Collections.unmodifiableList(beforeList); // 접근권한을 제어한다.
+    }
+}
+```
+
+프록시의 메소드를 통해 타깃을 사용하려고 할때, 타깃오브젝트를 생성하는 방법도있다.
+```java
+public class Client {
+
+    public static void main(String[] args) {
+     // Target target = new Proxy(new TargetImpl());
+        Target target = new Proxy(); // 프록시로 접근
+        List<Character> afterList = target.unmodifiable();
+
+        /**
+         * add()나 remove()메소드를 호출하면 예외발생시킨다.
+         */
+         
+		...
+}
+
+```
+
+```java
+public class Proxy implements Target {
+
+    private  Target target ;
+
+    @Override
+    public List<Character> unmodifiable() {
+        target = new TargetImpl(); // 지연 생성
+        List<Character> beforeList = target.unmodifiable(); // 타겟구현체로 List를 생성한다
+
+        beforeList.add('x');
+        beforeList.add('y');
+        System.out.println("beforeList" + beforeList);
+
+        return Collections.unmodifiableList(beforeList); // 접근권한을 제어한다.
+    }
+}
+
+```
+타깃의 기능자체에는 관여x 접근하는방법을 제어해주는 프록시를 이용함
+자신이 접근할 타깃클래스정보를 알고있는 경우가 많다.
+
+
+**단점**
+
+> 1. 프록시 만드는것 자체도 일이다.
+2. 타깃의 메소드가 늘어난다면 프록시에서 모든 메소드를 구현해 위임해야하며,중복코드도 늘어난다.
+3.  부가기능 코드가 중복될 가능성이 많아진다.
+
+
+
+### 다이나믹 프록시 
+
+자바에서는 프록시만드는걸 도와줄수있는 클래스들이 존재한다.
+
+
+위의 문제점중 2번을 리플렉션을 이용하여  타겟 인터페이스의 모든 메소드들을 한군데에서 처리해주는 InvocationHandler의 invoke()메소드로 처리할수있게되었다. 
+
+```java
+   public Object invoke(Object proxy, Method method, Object[] args)
+        throws Throwable;
+```
+InvocationHandler를 구현하는 오브젝트가 타깃을 가지고있다면  위임코드를 만들수있다.
+클라이언트의 요청을 리플렉션으로 변환해서 invoke메소드로 넘긴다.
+
+```java
+public class TransactionHandler implements InvocationHandler{
+	private Object target;
+    private PlatformTransactionManager transactionManager;
+    private String pattern;
+    
+    Setter...
+    
+    
+   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable{
+   		if(method.getName().startsWith(pattern)){
+        	return invokeInTransaction(method, args); // 부가기능을 적용할 대상 선별
+        }else{
+        	retrun method.invoke(target, args);
+           
+        }
+   }
+   
+   public Object invokeInTransaction(Method method, Object[] args) throws Throwable{
+   		... // 부가기능
+   }
+
+}
+
+```
+
+DI를 이용해 사용해야하는데 빈으로 등록할 방법이 없다. newProxyInstance()라는 스태틱 팩토리 메소드를 통해서만 만들어지기때문이다. 
+=> 스프링의 FactoryBean인터페이스를 이용해 빈으로 만들어줄 방법이 존재하지만, 한번에 여러개의 클래스에 공통 부가기능을 제공하는일이 불가능하다. 또한, 비슷한 프록시 팩토리빈의 설정이 중복되는것을 막을수없다.
+
+
+
+
+# 6.4 스프링의 프록시 팩토리빈
+
+ProxyFactoryBean 은 프록시를 생성하는 작업만 담당하고
+부가기능의 추가는 MethodInterceptor 인터페이스를 구현하여 만든다.
+
+**InvocationHandler 로 구현했을때와의차이점?**
+=> 타깃오브젝트에대한 의존도  타깃오브젝트의 정보를 함께받는지 안받는지의 차이
+
+
+
+
+어드바이스: 타깃 오브젝트에 종속되지않는 부가기능만을 순수하게 담는 오브젝트
+
+포인트컷 : 메소드 선정 알고리즘
+
+ProxyFactoryBean이 다이내믹 프록시 생성하고,
+포인트컷으로 어떤 메소드에 기능을 부가할건지 필터링한후 선정된 메소드에만 어드바이스를 요청한다.
+
+ProxyFactoryBean으로 인해 어떤 기능을 어디에 추가할건지만 신경쓸수 있게되었다.
+타깃마다 부가기능이 추가되는 문제를 해결했다.
+
+
+
+# 6.5 스프링 AOP 
+
+빈후처리기
+
+빈객체가 생성될떄마다 후처리 작업을 할수있게된다.
+스프링이 빈오브젝트를 생성하면, 일부를 프록시로 포장한뒤 빈으로 대신 등록할수도있다.
+
+ProxyFactoryBean에서와 다르게 DefaultAdvisorAutoProxyCreator는 클래스, 메소드를 선정할수있는 포인트컷이 필요하다
+(모든빈에 대해 프록시 자동적용대상을 선별해야하기때문에)
+
+
+객체지향 설계기법으로만은 해결하기 힘들었던 , 핵심코드와 부가기능코드를 분리하기위해 **AOP(애스펙트 지향 프로그래밍)** ( 핵심적인 기능에서 부가적인기능을 분리해서 애스펙트라는 모듈로 만들어서 설계하고 개발하는 방법) 이라는 패러다임이 사용되었다.
+
+핵심기능과 부가기능이 같이 껴있는 코드는 객체지향 기술의 가치가 떨어지기때문에 AOP로 애스펙트를 분리함으로써 객체지향적인 가치를 지킬수있도록 도와주는것이라고 볼수있다.
+
+
+# 6.6 트랜잭션 속성
+
+A라는 트랜잭션이 시작되고 종료되기전에 B를 호출한다면 어떤 트랜잭션 안에서 동작할것인가
+이미 진행중인 트랜잭션이 어떻게 영향을 미칠수있는가를 정의하는것이 트랜잭션 전파속성
+
+PROPAGATION_REQUIRED
+
+진행중인 트랜잭션이없으면 새로시작, 있으면 거기에 참여한다.
+A와 B가 모두 PROPAGATION_REQUIRED 라면, A,B A->B, B->A와같은 네가지조의 조합된 트랜잭션이 모두가능하다.
+
+PROPAGATION_REQUIRES_NEW
+
+항상 새로운 트랜잭션을 시작한다. 앞에서 시작된 트랜잭션이 있든없든
+
+PROPAGATION_NOT_SUPPORTED
+진행중인 트랜잭션이 있어도 무시한다.
+AOP를 이용해 한번에 많은 메소드를 동시에 이용해 적용하는 방법을 사용할때 유용하다
+그중 특별한 메소드만 트랜잭션 적용에서 제외하기위해 사용 
+
+
+
+### 소감
+
+AOP가 뭔지도 알겠고 무슨이야기를 하려는지도 알았다.
+그과정이 조금 deep해서 좀 헤매긴했지만...
+
+> AOP라는건 객체지향 설계기법만으로는 힘들었던 핵심코드에서 부가기능코드를 분리하기위한 패러다임.
+**어떻게쓰일수있을까?**
+로깅을 하거나, 혹은 락을 잡거나 하는상황에 쓰일수있을것이다. 
+**꼭 AOP로 잡지않고 필터나 혹은 인터셉터로 잡을수도있지않을까?**
+request/ response 쌍을 하나의 로그로 잡을방법이 없다. aop로 잡는것이 권장된다.
