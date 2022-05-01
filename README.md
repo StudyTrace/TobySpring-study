@@ -11,5 +11,5 @@
 
 ## 인원
 
-- 태형, heli-os, yreal(나), 개찐
+- 태형, heli(https://github.com/heli-os), yreal(나), 개찐
  
